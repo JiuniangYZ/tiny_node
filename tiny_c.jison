@@ -9,7 +9,8 @@
 "if"                        return 'IF';   
 "else"                      return 'ELSE';
 "break"                     return 'BREAK';
-"continue"                  return 'CONTINUE';                 
+"continue"                  return 'CONTINUE';  
+"let"                       return 'LET';               
 "="                         return '=';
 "+"                         return '+'; 
 "{"                         return '{';
@@ -50,12 +51,22 @@ FuncDecl:
   : FuncName '(' ArgDecls ')' '{' VarDecls Stmts '}' {yy.funcBuilder($1,$3,$4,$5)} //this is a whole func
   ;
 
+VarDecls
+  : /*empty*/ {}
+  | PvarDecls { $$ = yy.argSlicer($1);}
+  ;
+
+PvarDecls
+  : LET IDENTIFIER { $$ = {type:"p_var_decls", left:null, right: $2}; }
+  | PvarDecls ',' IDENTIFIER { $$ = {type:"p_var_decls", left:$1, right: $2}; }
+  ;
+
 FuncName 
   : IDENTIFIER {$$ = $1;}
   ;
 
 ArgDecls
-  : /*empty*/ {$$ = [] ;}
+  : /*empty*/ {$$ = [] ;} //basically arg decls is a serious of identifiers
   | PargDecls {$$ = yy.argDeclSlicer($1)}
   ;
 
@@ -120,7 +131,8 @@ StmtBlock
   ; 
 
 FuncCall
-  : IDENTIFIER '(' Args ')' {$$ = {type:"exp", subType:"func_call", func:$1, args:$3};}
+  : IDENTIFIER '(' Args ')' {$$ = {type:"exp", subType:"func_call", func:String($1), args:$3};}//here args is a serious of exps
+  ;
 
 Exp
   : Exp '+' Exp   {$$ = {type:"exp", subType:"add", left:$1, right:$3 };}
